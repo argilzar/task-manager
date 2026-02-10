@@ -57,27 +57,47 @@ export function useChatEmbed() {
     }
   }, [isReady, authToken, setAuth])
 
-  // Apply app theme to the embedded chat via whitelabel CSS variables
+  // Apply app theme to the embedded chat via whitelabel CSS variables.
+  // Watches the `dark` class on <html> (set by useTheme) so the embed
+  // stays in sync when the user toggles light/dark mode.
   useEffect(() => {
     if (!isReady) return
-    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-    setCssVariables(
-      isDark
-        ? {
-            '--uc-primary': '#f59e0b',
-            '--uc-background': '#111827',
-            '--uc-foreground': '#f3f4f6',
-            '--uc-bubble-user-bg': '#1f2937',
-            '--uc-bubble-assistant-bg': '#111827',
-          }
-        : {
-            '--uc-primary': '#f59e0b',
-            '--uc-background': '#ffffff',
-            '--uc-foreground': '#111827',
-            '--uc-bubble-user-bg': '#fffbeb',
-            '--uc-bubble-assistant-bg': '#ffffff',
-          },
-    )
+
+    const applyTheme = () => {
+      const isDark = document.documentElement.classList.contains('dark')
+      setCssVariables(
+        isDark
+          ? {
+              '--uc-primary': '#f59e0b',
+              '--uc-background': '#111827',
+              '--uc-foreground': '#f3f4f6',
+              '--uc-bubble-user-bg': '#1f2937',
+              '--uc-bubble-assistant-bg': '#111827',
+            }
+          : {
+              '--uc-primary': '#f59e0b',
+              '--uc-background': '#ffffff',
+              '--uc-foreground': '#111827',
+              '--uc-bubble-user-bg': '#fffbeb',
+              '--uc-bubble-assistant-bg': '#ffffff',
+            },
+      )
+    }
+
+    // Apply immediately
+    applyTheme()
+
+    // Re-apply whenever the dark class toggles
+    const observer = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        if (m.type === 'attributes' && m.attributeName === 'class') {
+          applyTheme()
+        }
+      }
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+
+    return () => observer.disconnect()
   }, [isReady, setCssVariables])
 
   const embedSrc = EMBED_TOKEN
