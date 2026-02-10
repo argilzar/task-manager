@@ -4,7 +4,8 @@ import { useCreateProject, useRemoveCreatedProject, useRenameCreatedProject, use
 import { useToast } from '@/components/ui/Toast'
 import { Button } from '@/components/ui/Button'
 import { cn, STATUS_LABELS } from '@/lib/utils'
-import { Pencil, Trash2, ArrowRight, Plus, FolderOpen } from 'lucide-react'
+import { Pencil, Trash2, ArrowRight, Plus } from 'lucide-react'
+import usableMascot from '@/assets/usable-mascot.png'
 import type { TaskWithTags } from '../../../shared/types'
 
 interface ProjectsViewProps {
@@ -155,12 +156,14 @@ export function ProjectsView({ onNavigateToProject }: ProjectsViewProps) {
 
   if (stats.length === 0 && !creatingNew) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 text-center">
-        <FolderOpen size={48} className="text-gray-300 dark:text-gray-600 mb-4" />
-        <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">No projects yet</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-sm">
-          Projects are created when you assign tasks to them, or you can create an empty project to get started.
-        </p>
+      <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
+        <img src={usableMascot} alt="" className="w-16 h-16 object-contain opacity-60" />
+        <div>
+          <h2 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">No projects yet</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 max-w-sm">
+            Projects are created when you assign tasks to them, or you can create an empty project to get started.
+          </p>
+        </div>
         <Button onClick={() => setCreatingNew(true)} className="gap-2">
           <Plus size={16} /> New Project
         </Button>

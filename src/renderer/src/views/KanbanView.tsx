@@ -5,6 +5,7 @@ import { TaskCard } from '@/components/tasks/TaskCard'
 import { useToast } from '@/components/ui/Toast'
 import type { TaskWithTags } from '../../../shared/types'
 import { STATUS_ORDER, STATUS_LABELS } from '@/lib/utils'
+import usableMascot from '@/assets/usable-mascot.png'
 
 interface KanbanViewProps {
   onTaskClick: (task: TaskWithTags) => void
@@ -96,7 +97,12 @@ export function KanbanView({ onTaskClick, projectFilter }: KanbanViewProps) {
     })
   }
 
-  if (isLoading) return <div className="text-gray-500 dark:text-gray-400 text-center py-8">Loading...</div>
+  if (isLoading) return (
+    <div className="flex flex-col items-center justify-center py-12 gap-3">
+      <img src={usableMascot} alt="" className="w-12 h-12 object-contain animate-pulse" />
+      <span className="text-gray-500 dark:text-gray-400 text-sm">Loading...</span>
+    </div>
+  )
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>

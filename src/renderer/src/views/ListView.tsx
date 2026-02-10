@@ -6,6 +6,7 @@ import { formatDate, STATUS_LABELS } from '@/lib/utils'
 import { useProjects } from '@/hooks/use-projects'
 import { useState } from 'react'
 import { Loader2, Trash2 } from 'lucide-react'
+import usableMascot from '@/assets/usable-mascot.png'
 import { useToast } from '@/components/ui/Toast'
 import type { TaskWithTags } from '../../../shared/types'
 
@@ -103,13 +104,21 @@ export function ListView({ filters, onTaskClick, projectFilter }: ListViewProps)
     })
   }
 
-  if (isLoading) return <div className="text-gray-500 dark:text-gray-400 text-center py-8">Loading tasks...</div>
+  if (isLoading) return (
+    <div className="flex flex-col items-center justify-center py-12 gap-3">
+      <img src={usableMascot} alt="" className="w-12 h-12 object-contain animate-pulse" />
+      <span className="text-gray-500 dark:text-gray-400 text-sm">Loading tasks...</span>
+    </div>
+  )
 
   if (!sortedTasks.length) {
     return (
-      <div className="text-center py-12 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
-        <p className="text-gray-600 dark:text-gray-300 mb-2">No tasks yet</p>
-        <p className="text-sm text-gray-500 dark:text-gray-400">Create your first task to get started</p>
+      <div className="flex flex-col items-center justify-center py-16 gap-4">
+        <img src={usableMascot} alt="" className="w-16 h-16 object-contain opacity-60" />
+        <div className="text-center">
+          <p className="text-gray-600 dark:text-gray-300 mb-1">No tasks yet</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Create your first task to get started</p>
+        </div>
       </div>
     )
   }
