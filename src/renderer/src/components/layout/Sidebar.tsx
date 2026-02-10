@@ -3,9 +3,10 @@ import { ThemeToggle } from './ThemeToggle'
 import { Button } from '@/components/ui/Button'
 import { useConnectionStatus, useWorkspaceConfig } from '@/hooks/use-usable'
 import { useState, useEffect, useCallback } from 'react'
-import { List, Columns3, GitBranch, FolderOpen, LogIn, LogOut, Settings, MessageCircle } from 'lucide-react'
+import { List, Columns3, GitBranch, GanttChart, FolderOpen, LogIn, LogOut, Settings, MessageCircle } from 'lucide-react'
 import type { ChatMode } from '../../../../shared/types'
 import type { ReactNode } from 'react'
+import usableLogo from '@/assets/usable-logo-transparent.png'
 
 interface SidebarProps {
   currentView: string
@@ -19,6 +20,7 @@ interface SidebarProps {
 const NAV_ITEMS: { id: string; label: string; icon: ReactNode }[] = [
   { id: 'list', label: 'List View', icon: <List size={16} /> },
   { id: 'kanban', label: 'Kanban Board', icon: <Columns3 size={16} /> },
+  { id: 'gantt', label: 'Timeline', icon: <GanttChart size={16} /> },
   { id: 'graph', label: 'Dependency Graph', icon: <GitBranch size={16} /> },
 ]
 
@@ -78,8 +80,9 @@ export function Sidebar({ currentView, onViewChange, onOpenSettings, chatMode, d
 
   return (
     <aside className="w-56 h-full bg-gray-50 dark:bg-gray-800/50 border-r border-gray-200 dark:border-gray-700 flex flex-col">
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-        <h1 className="text-lg font-bold text-gray-900 dark:text-white">My Tasks</h1>
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2.5">
+        <img src={usableLogo} alt="Usable" className="h-6 w-6 object-contain" />
+        <h1 className="text-sm font-bold text-gray-900 dark:text-white">My Tasks Planner</h1>
       </div>
 
       <nav className="flex-1 p-3 space-y-1">

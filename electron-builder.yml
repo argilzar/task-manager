@@ -1,5 +1,5 @@
 appId: com.flowcore.my-tasks-plan
-productName: My Tasks Plan
+productName: My Tasks Planner
 directories:
   buildResources: resources
 files:
@@ -11,6 +11,7 @@ files:
 asarUnpack:
   - node_modules/better-sqlite3/**
 mac:
+  icon: resources/icon.icns
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
     - NSDocumentsFolderUsageDescription: Application needs access for task data.

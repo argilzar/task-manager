@@ -7,6 +7,7 @@ import { TaskDetail } from '@/components/tasks/TaskDetail'
 import { ListView } from '@/views/ListView'
 import { KanbanView } from '@/views/KanbanView'
 import { DependencyGraphView } from '@/views/DependencyGraphView'
+import { GanttView } from '@/views/GanttView'
 import { ProjectsView } from '@/views/ProjectsView'
 import { UsableEmbed } from '@/components/chat/UsableEmbed'
 import { DockedChat } from '@/components/chat/DockedChat'
@@ -18,6 +19,8 @@ import { useProjects, useProjectFilter } from '@/hooks/use-projects'
 import { useChatMode } from '@/hooks/use-chat-mode'
 import { LogIn } from 'lucide-react'
 import type { TaskWithTags } from '../../shared/types'
+import usableLogo from '@/assets/usable-logo-transparent.png'
+import usableMascot from '@/assets/usable-mascot.png'
 
 const isAppMode = new URLSearchParams(window.location.search).get('mode') === 'app'
 
@@ -100,8 +103,9 @@ export default function App() {
   if (!isReady) {
     if (!isAppMode) return null // Transparent overlay — show nothing while loading
     return (
-      <div className="h-screen flex items-center justify-center bg-white dark:bg-gray-900">
-        <div className="text-gray-500 dark:text-gray-400">Loading...</div>
+      <div className="h-screen flex flex-col items-center justify-center bg-white dark:bg-gray-900 gap-4">
+        <img src={usableMascot} alt="" className="w-16 h-16 object-contain animate-pulse" />
+        <div className="text-gray-500 dark:text-gray-400 text-sm">Loading...</div>
       </div>
     )
   }
@@ -123,10 +127,17 @@ export default function App() {
   // App mode: auth gate
   if (authState !== 'authenticated') {
     return (
-      <div className="h-screen flex items-center justify-center bg-white dark:bg-gray-900">
+      <div className="h-screen flex flex-col items-center justify-center bg-white dark:bg-gray-900 gap-6">
+        <div className="flex flex-col items-center gap-3">
+          <img src={usableMascot} alt="" className="w-20 h-20 object-contain" />
+          <div className="flex items-center gap-2">
+            <img src={usableLogo} alt="" className="h-5 w-5 object-contain" />
+            <span className="text-sm font-bold text-gray-900 dark:text-white">My Tasks Planner</span>
+          </div>
+        </div>
         {authState === 'checking' || authState === 'logging-in' ? (
           <div className="text-center space-y-2">
-            <div className="text-gray-500 dark:text-gray-400">
+            <div className="text-gray-500 dark:text-gray-400 text-sm">
               {authState === 'checking' ? 'Checking session...' : 'Logging in...'}
             </div>
             <p className="text-xs text-gray-400 dark:text-gray-500">
@@ -135,7 +146,7 @@ export default function App() {
           </div>
         ) : (
           <div className="text-center space-y-4">
-            <p className="text-gray-600 dark:text-gray-300">Login required to continue</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">Login required to continue</p>
             <Button onClick={triggerLogin} className="gap-2">
               <LogIn size={16} /> Login
             </Button>
@@ -185,12 +196,15 @@ export default function App() {
           onClearProjects={clearProjects}
         />
 
-        <main className={`flex-1 p-4 ${currentView === 'kanban' ? 'overflow-hidden' : 'overflow-auto'}`}>
+        <main className={`flex-1 ${currentView === 'gantt' ? 'overflow-hidden' : currentView === 'kanban' ? 'overflow-hidden p-4' : 'overflow-auto p-4'}`}>
           {currentView === 'list' && (
             <ListView filters={filters} onTaskClick={handleTaskClick} projectFilter={selectedProjects} />
           )}
           {currentView === 'kanban' && (
             <KanbanView onTaskClick={handleTaskClick} projectFilter={selectedProjects} />
+          )}
+          {currentView === 'gantt' && (
+            <GanttView onTaskClick={handleTaskClick} projectFilter={selectedProjects} />
           )}
           {currentView === 'graph' && (
             <DependencyGraphView onTaskClick={handleTaskClick} projectFilter={selectedProjects} />

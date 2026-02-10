@@ -146,7 +146,7 @@ function createTray(): void {
     }
   ])
 
-  tray.setToolTip('My Tasks Plan')
+  tray.setToolTip('My Tasks Planner')
   tray.setContextMenu(contextMenu)
 
   tray.on('click', () => {
