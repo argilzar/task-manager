@@ -131,7 +131,7 @@ To create a custom AI expert that powers the embedded chat:
      ```
 
 4. **Enable Tools**
-   - Select which tools the expert can use:
+   - Select which built-in tools the expert can use:
      - `agentic-search-fragments` - Search knowledge base semantically
      - `get-memory-fragment-content` - Read full fragment content
      - `list-memory-fragments` - List and filter fragments
@@ -139,11 +139,25 @@ To create a custom AI expert that powers the embedded chat:
      - `exa-get-contents` - Extract content from URLs
    - Lock tools if users shouldn't be able to disable them
 
-5. **Configure Model Settings**
+5. **Add Parent Tools (Required)**
+   - Parent tools allow the AI to interact with this application
+   - In the expert settings, add the following parent tools (name only, schema is provided by the app at runtime):
+     - `list_tasks` - List all tasks with optional filtering
+     - `get_task` - Get a single task by ID
+     - `create_task` - Create a new task
+     - `update_task` - Update an existing task
+     - `delete_task` - Archive a task
+     - `add_dependency` - Add a dependency between tasks
+     - `remove_dependency` - Remove a dependency
+     - `get_task_graph` - Get the full task dependency graph
+     - `add_comment` - Add a comment to a task
+     - `list_comments` - List comments on a task
+
+6. **Configure Model Settings**
    - **Default Model**: Leave as "Inherit" to use the embed configuration's model
    - **Thinking Mode**: Quick Thinking (default, uses Claude Haiku 4.5) is recommended for most use cases
 
-6. **Save the Expert**
+7. **Save the Expert**
    - Click "Create" to save your expert
    - Note the expert ID for use in embed configuration
 
