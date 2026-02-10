@@ -140,9 +140,8 @@ To create a custom AI expert that powers the embedded chat:
    - Lock tools if users shouldn't be able to disable them
 
 5. **Configure Model Settings**
-   - **Default Model**: Choose the AI model (e.g., `claude-sonnet-4`)
-   - **Thinking Mode**: Standard, Quick Thinking, or Deep Thinking
-   - **Temperature**: Control response creativity (0.0-1.0)
+   - **Default Model**: Leave as "Inherit" to use the embed configuration's model
+   - **Thinking Mode**: Quick Thinking (default, uses Claude Haiku 4.5) is recommended for most use cases
 
 6. **Save the Expert**
    - Click "Create" to save your expert
