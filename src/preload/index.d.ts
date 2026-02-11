@@ -28,6 +28,7 @@ interface TagsApi {
 interface AppApi {
   getTheme(): Promise<IpcResponse<ThemeMode>>
   setTheme(theme: string): Promise<IpcResponse<void>>
+  getAppName(): Promise<IpcResponse<string>>
 }
 
 interface AuthApi {

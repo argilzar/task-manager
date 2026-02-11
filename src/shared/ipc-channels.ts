@@ -21,6 +21,7 @@ export const IPC_CHANNELS = {
   // App
   APP_GET_THEME: 'app:get-theme',
   APP_SET_THEME: 'app:set-theme',
+  APP_GET_NAME: 'app:get-name',
   // Auth
   AUTH_LOGIN: 'auth:login',
   AUTH_LOGOUT: 'auth:logout',
