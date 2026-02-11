@@ -46,4 +46,9 @@ export const IPC_CHANNELS = {
   CHAT_INJECT_THEME_CSS: 'chat:inject-theme-css',
   // Cross-window sync
   TASKS_CHANGED: 'tasks:changed',
+  // JIRA
+  JIRA_GET_CONFIG: 'jira:get-config',
+  JIRA_SET_CONFIG: 'jira:set-config',
+  JIRA_GET_ISSUE: 'jira:get-issue',
+  JIRA_IMPORT_TASK: 'jira:import-task',
 } as const

@@ -128,11 +128,23 @@ export const PARENT_TOOLS: ParentToolSchema[] = [
       required: ['taskId'],
     },
   },
+  {
+    name: 'import_jira_task',
+    description: 'Import a JIRA issue into the planner by its issue key (e.g. PROJ-123). Fetches the issue from JIRA, creates a linked task with the same title and description, and stores the JIRA key so status changes in the planner are synced back to JIRA. JIRA must be configured in Settings (domain, email, API token). If the issue is already imported, returns the existing task.',
+    parameters: {
+      type: 'object',
+      properties: {
+        issueKey: { type: 'string', description: 'JIRA issue key (e.g. PROJ-123, MY-456)' },
+      },
+      required: ['issueKey'],
+    },
+  },
 ]
 
 const MUTATING_TOOLS = new Set([
   'create_task', 'update_task', 'delete_task',
   'add_dependency', 'remove_dependency', 'add_comment',
+  'import_jira_task',
 ])
 
 export function createToolCallHandler(qc: QueryClient) {
@@ -177,6 +189,8 @@ export function createToolCallHandler(qc: QueryClient) {
           const taskResult = await window.api.tasks.get(a.taskId as string)
           return taskResult.success ? { success: true, data: taskResult.data.comments } : taskResult
         }
+        case 'import_jira_task':
+          return window.api.jira.importTask(a.issueKey as string)
         default:
           return { error: `Unknown tool: ${tool}` }
       }

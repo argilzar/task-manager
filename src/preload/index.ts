@@ -6,7 +6,7 @@ const api = {
     list: (filters?: { status?: string; priority?: string; tag?: string }) =>
       ipcRenderer.invoke(IPC_CHANNELS.TASKS_LIST, filters),
     get: (id: string) => ipcRenderer.invoke(IPC_CHANNELS.TASKS_GET, id),
-    create: (data: { title: string; description?: string; status?: string; priority?: string; tags?: string[]; projects?: string[] }) =>
+    create: (data: { title: string; description?: string; status?: string; priority?: string; tags?: string[]; projects?: string[]; jiraKey?: string }) =>
       ipcRenderer.invoke(IPC_CHANNELS.TASKS_CREATE, data),
     update: (id: string, data: Record<string, unknown>) =>
       ipcRenderer.invoke(IPC_CHANNELS.TASKS_UPDATE, id, data),
@@ -75,6 +75,13 @@ const api = {
     return () => {
       ipcRenderer.removeListener(IPC_CHANNELS.TASKS_CHANGED, handler)
     }
+  },
+  jira: {
+    getConfig: () => ipcRenderer.invoke(IPC_CHANNELS.JIRA_GET_CONFIG),
+    setConfig: (config: { domain: string; email: string; apiToken: string } | null) =>
+      ipcRenderer.invoke(IPC_CHANNELS.JIRA_SET_CONFIG, config),
+    getIssue: (issueKey: string) => ipcRenderer.invoke(IPC_CHANNELS.JIRA_GET_ISSUE, issueKey),
+    importTask: (issueKey: string) => ipcRenderer.invoke(IPC_CHANNELS.JIRA_IMPORT_TASK, issueKey),
   },
   auth: {
     login: () => ipcRenderer.invoke(IPC_CHANNELS.AUTH_LOGIN),

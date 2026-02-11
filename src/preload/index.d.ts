@@ -1,9 +1,9 @@
-import type { IpcResponse, TaskWithTags, GraphData, ThemeMode, ChatMode, UsableWorkspace, UsableFragmentType, WorkspaceConfig, WorkspaceMember } from '../shared/types'
+import type { IpcResponse, TaskWithTags, GraphData, ThemeMode, ChatMode, UsableWorkspace, UsableFragmentType, WorkspaceConfig, WorkspaceMember, JiraConfig } from '../shared/types'
 
 interface TasksApi {
   list(filters?: { status?: string; priority?: string; tag?: string }): Promise<IpcResponse<TaskWithTags[]>>
   get(id: string): Promise<IpcResponse<TaskWithTags>>
-  create(data: { title: string; description?: string; status?: string; priority?: string; tags?: string[] }): Promise<IpcResponse<TaskWithTags>>
+  create(data: { title: string; description?: string; status?: string; priority?: string; tags?: string[]; projects?: string[]; jiraKey?: string }): Promise<IpcResponse<TaskWithTags>>
   update(id: string, data: Record<string, unknown>): Promise<IpcResponse<TaskWithTags>>
   delete(id: string): Promise<IpcResponse<void>>
   reorder(updates: { id: string; kanbanOrder?: number; listOrder?: number; status?: string }[]): Promise<IpcResponse<void>>
@@ -40,6 +40,13 @@ interface AuthApi {
   onTokenChanged(callback: (token: string | null) => void): () => void
 }
 
+interface JiraApi {
+  getConfig(): Promise<IpcResponse<JiraConfig | null>>
+  setConfig(config: JiraConfig | null): Promise<IpcResponse<void>>
+  getIssue(issueKey: string): Promise<IpcResponse<{ key: string; summary: string; description: string; statusName: string; priorityName?: string; webUrl: string }>>
+  importTask(issueKey: string): Promise<IpcResponse<TaskWithTags>>
+}
+
 interface UsableApi {
   listWorkspaces(): Promise<IpcResponse<UsableWorkspace[]>>
   getFragmentTypes(workspaceId: string): Promise<IpcResponse<UsableFragmentType[]>>
@@ -67,6 +74,7 @@ interface Api {
   chat: ChatApi
   auth: AuthApi
   usable: UsableApi
+  jira: JiraApi
   onTasksChanged(callback: () => void): () => void
 }
 

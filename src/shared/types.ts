@@ -37,6 +37,7 @@ export interface TaskWithTags {
   startDate?: string     // ISO date string (YYYY-MM-DD)
   endDate?: string       // ISO date string (YYYY-MM-DD)
   assigneeId?: string    // userId of assigned workspace member
+  jiraKey?: string       // e.g. PROJ-123 — when set, status changes sync to JIRA
 }
 
 export interface CreateTaskInput {
@@ -49,6 +50,7 @@ export interface CreateTaskInput {
   startDate?: string
   endDate?: string
   assigneeId?: string
+  jiraKey?: string
 }
 
 export interface UpdateTaskInput {
@@ -65,6 +67,7 @@ export interface UpdateTaskInput {
   startDate?: string | null
   endDate?: string | null
   assigneeId?: string | null
+  jiraKey?: string | null
 }
 
 export interface GraphData {
@@ -94,4 +97,11 @@ export interface WorkspaceConfig {
   workspaceId: string
   workspaceName: string
   taskFragmentTypeId?: string
+}
+
+/** JIRA Cloud connection (domain only, e.g. "mycompany"). Auth: email + API token. */
+export interface JiraConfig {
+  domain: string
+  email: string
+  apiToken: string
 }

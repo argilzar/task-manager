@@ -4,6 +4,7 @@ import { registerDependencyHandlers } from "./ipc/dependency-handlers";
 import { registerTagHandlers } from "./ipc/tag-handlers";
 import { registerAuthHandlers } from "./ipc/auth-handlers";
 import { registerUsableHandlers } from "./ipc/usable-handlers";
+import { registerJiraHandlers } from "./ipc/jira-handlers";
 import { getAppName } from "./app-config";
 import { IPC_CHANNELS } from "../shared/ipc-channels";
 
@@ -13,6 +14,7 @@ export function registerAllHandlers(): void {
 	registerTagHandlers();
 	registerAuthHandlers();
 	registerUsableHandlers();
+	registerJiraHandlers();
 
 	// Theme handlers
 	let storedTheme = "system";

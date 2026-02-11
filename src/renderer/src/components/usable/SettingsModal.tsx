@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/Button'
 import { Dialog } from '@/components/ui/Dialog'
 import { useWorkspaceConfig, useSetWorkspace, useFragmentTypes } from '@/hooks/use-usable'
@@ -32,6 +32,14 @@ export function SettingsModal({ open, onClose, chatMode, onChatModeChange }: Set
   const [embedUrlOverride, setEmbedUrlOverride] = useState('')
   const [embedTokenOverride, setEmbedTokenOverride] = useState('')
 
+  // JIRA integration
+  const [jiraOpen, setJiraOpen] = useState(false)
+  const [jiraDomain, setJiraDomain] = useState('')
+  const [jiraEmail, setJiraEmail] = useState('')
+  const [jiraApiToken, setJiraApiToken] = useState('')
+  const [jiraHasLoadedToken, setJiraHasLoadedToken] = useState(false)
+  const loadedJiraTokenRef = useRef<string>('')
+
   const { data: fragmentTypes } = useFragmentTypes(selectedWorkspaceId || undefined)
 
   // Load workspaces + advanced overrides when modal opens
@@ -50,6 +58,23 @@ export function SettingsModal({ open, onClose, chatMode, onChatModeChange }: Set
     // Load advanced overrides from localStorage
     setEmbedUrlOverride(localStorage.getItem('embed-url-override') || '')
     setEmbedTokenOverride(localStorage.getItem('embed-token-override') || '')
+
+    // Load JIRA config
+    window.api.jira.getConfig().then(result => {
+      if (result.success && result.data) {
+        setJiraDomain(result.data.domain)
+        setJiraEmail(result.data.email)
+        setJiraApiToken(result.data.apiToken)
+        loadedJiraTokenRef.current = result.data.apiToken
+        setJiraHasLoadedToken(Boolean(result.data.apiToken))
+      } else {
+        setJiraDomain('')
+        setJiraEmail('')
+        setJiraApiToken('')
+        loadedJiraTokenRef.current = ''
+        setJiraHasLoadedToken(false)
+      }
+    })
 
     window.api.usable.listWorkspaces()
       .then(result => {
@@ -97,6 +122,17 @@ export function SettingsModal({ open, onClose, chatMode, onChatModeChange }: Set
     }
 
     try {
+      // Save JIRA config (clear if domain/email/token all empty; keep existing token if token field left blank)
+      const tokenToSave = jiraApiToken.trim() || loadedJiraTokenRef.current
+      const hasJira = jiraDomain.trim() && jiraEmail.trim() && tokenToSave
+      const jiraResult = await window.api.jira.setConfig(
+        hasJira ? { domain: jiraDomain.trim(), email: jiraEmail.trim(), apiToken: tokenToSave } : null
+      )
+      if (!jiraResult.success) {
+        setError(jiraResult.error || 'Failed to save JIRA config')
+        return
+      }
+
       await setWorkspace.mutateAsync({
         workspaceId: selectedWorkspaceId,
         workspaceName: selectedWorkspaceName,
@@ -254,6 +290,99 @@ export function SettingsModal({ open, onClose, chatMode, onChatModeChange }: Set
                   Override the embed token. Leave empty for the built-in default.
                 </p>
               </div>
+            </div>
+          )}
+        </div>
+
+        {/* JIRA integration — collapsible */}
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
+          <button
+            type="button"
+            onClick={() => setJiraOpen(prev => !prev)}
+            className="flex items-center gap-1.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+          >
+            {jiraOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            JIRA integration
+          </button>
+
+          {jiraOpen && (
+            <div className="mt-3 space-y-3">
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Import issues by key in chat (e.g. “Import PROJ-123”) and sync status changes back to JIRA. Use your Atlassian account email and an{' '}
+                <a
+                  href="https://id.atlassian.com/manage-profile/security/api-tokens"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary-600 dark:text-primary-400 hover:underline"
+                >
+                  API token
+                </a>
+                .
+              </p>
+              <div>
+                <label htmlFor="settings-jira-domain" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                  JIRA domain
+                </label>
+                <input
+                  id="settings-jira-domain"
+                  type="text"
+                  value={jiraDomain}
+                  onChange={e => setJiraDomain(e.target.value)}
+                  placeholder="mycompany"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-50 text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                />
+                <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
+                  Your Atlassian site name only, e.g. <code className="bg-gray-100 dark:bg-gray-800 px-1 rounded">mycompany</code> for https://mycompany.atlassian.net
+                </p>
+              </div>
+              <div>
+                <label htmlFor="settings-jira-email" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                  Email
+                </label>
+                <input
+                  id="settings-jira-email"
+                  type="email"
+                  value={jiraEmail}
+                  onChange={e => setJiraEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-50 text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                />
+              </div>
+              <div>
+                <label htmlFor="settings-jira-token" className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                  API token
+                </label>
+                <input
+                  id="settings-jira-token"
+                  type="password"
+                  value={jiraApiToken}
+                  onChange={e => setJiraApiToken(e.target.value)}
+                  placeholder={jiraHasLoadedToken ? '•••••••• (leave blank to keep)' : ''}
+                  autoComplete="off"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-50 text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                />
+              </div>
+              {(jiraDomain || jiraEmail || jiraApiToken) && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={async () => {
+                    const result = await window.api.jira.setConfig(null)
+                    if (result.success) {
+                      setJiraDomain('')
+                      setJiraEmail('')
+                      setJiraApiToken('')
+                      setJiraHasLoadedToken(false)
+                      loadedJiraTokenRef.current = ''
+                    } else {
+                      setError(result.error || 'Failed to clear JIRA config')
+                    }
+                  }}
+                >
+                  Clear JIRA configuration
+                </Button>
+              )}
             </div>
           )}
         </div>

@@ -6,7 +6,19 @@ import { taskToFragmentPayload, fragmentToTask } from '../fragment-serializer'
 import { createFragment, updateFragment, countFragments } from '../usable-api'
 import { getCachedTaskFragments, getCachedFragment, invalidateTaskCache, broadcastTasksChanged } from '../task-cache'
 import { getTokenClaims } from '../auth'
+import { getJiraConfig } from '../jira-config'
+import { transitionJiraIssue } from '../jira-api'
 import type { IpcResponse, TaskWithTags, CreateTaskInput, UpdateTaskInput } from '../../shared/types'
+import type { TaskStatus } from '../../shared/types'
+
+/** Fire-and-forget: if task is linked to JIRA, sync planner status to JIRA. */
+function syncJiraStatusIfLinked(jiraKey: string, plannerStatus: TaskStatus): void {
+  const config = getJiraConfig()
+  if (!config) return
+  transitionJiraIssue(config, jiraKey, plannerStatus).then(result => {
+    if (!result.ok) console.warn('[jira] Status sync failed:', result.error)
+  }).catch(err => console.warn('[jira] Status sync error:', err))
+}
 
 // Promise-based dedup guard for task creation — prevents duplicate creates from race conditions.
 // Stores the in-flight Promise immediately (before await), so a second call finds it and awaits
@@ -97,6 +109,7 @@ export function registerTaskHandlers(): void {
           startDate: data.startDate,
           endDate: data.endDate,
           assigneeId: data.assigneeId,
+          jiraKey: data.jiraKey,
         })
 
         const result = await createFragment({
@@ -126,6 +139,7 @@ export function registerTaskHandlers(): void {
           startDate: data.startDate,
           endDate: data.endDate,
           assigneeId: data.assigneeId,
+          jiraKey: data.jiraKey,
         }
 
         return { success: true, data: created }
@@ -171,6 +185,7 @@ export function registerTaskHandlers(): void {
         startDate: data.startDate === null ? undefined : (data.startDate ?? current.startDate),
         endDate: data.endDate === null ? undefined : (data.endDate ?? current.endDate),
         assigneeId: data.assigneeId === null ? undefined : (data.assigneeId ?? current.assigneeId),
+        jiraKey: data.jiraKey === null ? undefined : (data.jiraKey ?? current.jiraKey),
       }
 
       const payload = taskToFragmentPayload(merged)
@@ -178,6 +193,11 @@ export function registerTaskHandlers(): void {
 
       invalidateTaskCache()
       broadcastTasksChanged()
+
+      // Sync status to JIRA when a linked task’s status changes
+      if (current.jiraKey && data.status !== undefined && data.status !== current.status) {
+        syncJiraStatusIfLinked(current.jiraKey, data.status)
+      }
 
       // Return merged data directly instead of re-fetching
       const result: TaskWithTags = {
@@ -229,11 +249,12 @@ export function registerTaskHandlers(): void {
       await Promise.all(updates.map(async (update) => {
         const fragment = await getCachedFragment(config.workspaceId, update.id)
         const current = fragmentToTask(fragment)
+        const newStatus = update.status ? (update.status as TaskStatus) : current.status
 
         const merged = {
           title: current.title,
           description: current.description,
-          status: update.status ? (update.status as any) : current.status,
+          status: newStatus,
           priority: current.priority,
           kanbanOrder: update.kanbanOrder ?? current.kanbanOrder,
           listOrder: update.listOrder ?? current.listOrder,
@@ -245,10 +266,15 @@ export function registerTaskHandlers(): void {
           startDate: current.startDate,
           endDate: current.endDate,
           assigneeId: current.assigneeId,
+          jiraKey: current.jiraKey,
         }
 
         const payload = taskToFragmentPayload(merged)
         await updateFragment(update.id, payload)
+
+        if (current.jiraKey && update.status && update.status !== current.status) {
+          syncJiraStatusIfLinked(current.jiraKey, newStatus)
+        }
       }))
 
       invalidateTaskCache()
@@ -294,6 +320,7 @@ export function registerTaskHandlers(): void {
         startDate: current.startDate,
         endDate: current.endDate,
         assigneeId: current.assigneeId,
+        jiraKey: current.jiraKey,
       }
 
       const payload = taskToFragmentPayload(merged)

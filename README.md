@@ -123,8 +123,9 @@ To create a custom AI expert that powers the embedded chat:
      - `remove_dependency` - Remove a dependency
      - `get_task_graph` - Get the full task dependency graph
      - `add_comment` - Add a comment to a task
-     - `list_comments` - List comments on a task
-     - `list_members` - List workspace members
+   - `list_comments` - List comments on a task
+   - `list_members` - List workspace members
+   - `import_jira_task` - Import a JIRA issue by key (e.g. PROJ-123) into the planner; requires JIRA to be configured
 
 6. **Link Expert to Embed Configuration**
    - Go to `/settings/embeds`
@@ -140,6 +141,18 @@ To create a custom AI expert that powers the embedded chat:
 | `list-memory-fragments` | List fragments with SQL-like filtering |
 | `exa-search` | Search the web for information |
 | `exa-get-contents` | Extract and read content from URLs |
+
+## JIRA integration
+
+You can import JIRA Cloud issues into the planner and have status changes sync back to JIRA.
+
+1. **Configure JIRA** (required once): Open **Settings**, expand **JIRA integration**, and enter your JIRA Cloud domain (e.g. `mycompany` for `https://mycompany.atlassian.net`), Atlassian account email, and [API token](https://id.atlassian.com/manage-profile/security/api-tokens). Click **Save**.
+
+2. **Import in chat**: In the AI chat, say e.g. “Import PROJ-123” or “Add MY-456 from JIRA.” The `import_jira_task` tool will fetch the issue and create a linked task. If the issue was already imported, the existing task is returned.
+
+3. **Status sync**: When you move a linked task to another column (e.g. To Do → In progress → Done), the app will try to transition the linked JIRA issue to a matching status. Sync is best-effort and does not block the UI.
+
+See [docs/jira-integration.md](docs/jira-integration.md) for implementation details, status mapping, and API usage.
 
 ## Project Structure
 
