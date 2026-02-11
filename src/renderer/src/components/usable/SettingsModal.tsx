@@ -4,6 +4,7 @@ import { Dialog } from '@/components/ui/Dialog'
 import { useWorkspaceConfig, useSetWorkspace, useFragmentTypes } from '@/hooks/use-usable'
 import { useConnectionStatus } from '@/hooks/use-usable'
 import { cn } from '@/lib/utils'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import type { UsableWorkspace, UsableFragmentType, ChatMode } from '../../../../shared/types'
 
 interface SettingsModalProps {
@@ -26,9 +27,14 @@ export function SettingsModal({ open, onClose, chatMode, onChatModeChange }: Set
   const [selectedWorkspaceName, setSelectedWorkspaceName] = useState('')
   const [selectedFragmentTypeId, setSelectedFragmentTypeId] = useState('')
 
+  // Advanced overrides
+  const [advancedOpen, setAdvancedOpen] = useState(false)
+  const [embedUrlOverride, setEmbedUrlOverride] = useState('')
+  const [embedTokenOverride, setEmbedTokenOverride] = useState('')
+
   const { data: fragmentTypes } = useFragmentTypes(selectedWorkspaceId || undefined)
 
-  // Load workspaces when modal opens
+  // Load workspaces + advanced overrides when modal opens
   useEffect(() => {
     if (!open) return
     setLoading(true)
@@ -40,6 +46,10 @@ export function SettingsModal({ open, onClose, chatMode, onChatModeChange }: Set
       setSelectedWorkspaceName(currentConfig.workspaceName || '')
       setSelectedFragmentTypeId(currentConfig.taskFragmentTypeId || '')
     }
+
+    // Load advanced overrides from localStorage
+    setEmbedUrlOverride(localStorage.getItem('embed-url-override') || '')
+    setEmbedTokenOverride(localStorage.getItem('embed-token-override') || '')
 
     window.api.usable.listWorkspaces()
       .then(result => {
@@ -73,6 +83,19 @@ export function SettingsModal({ open, onClose, chatMode, onChatModeChange }: Set
 
   const handleSave = async () => {
     if (!selectedWorkspaceId) return
+
+    // Save advanced overrides to localStorage
+    if (embedUrlOverride.trim()) {
+      localStorage.setItem('embed-url-override', embedUrlOverride.trim())
+    } else {
+      localStorage.removeItem('embed-url-override')
+    }
+    if (embedTokenOverride.trim()) {
+      localStorage.setItem('embed-token-override', embedTokenOverride.trim())
+    } else {
+      localStorage.removeItem('embed-token-override')
+    }
+
     try {
       await setWorkspace.mutateAsync({
         workspaceId: selectedWorkspaceId,
@@ -80,6 +103,14 @@ export function SettingsModal({ open, onClose, chatMode, onChatModeChange }: Set
         taskFragmentTypeId: selectedFragmentTypeId || undefined,
       })
       onClose()
+
+      // Reload to apply URL/token changes to the embed iframe
+      if (
+        (embedUrlOverride.trim() || '') !== (localStorage.getItem('embed-url-override') || '') ||
+        (embedTokenOverride.trim() || '') !== (localStorage.getItem('embed-token-override') || '')
+      ) {
+        window.location.reload()
+      }
     } catch (err) {
       setError(String(err))
     }
@@ -180,6 +211,52 @@ export function SettingsModal({ open, onClose, chatMode, onChatModeChange }: Set
             </select>
           </div>
         )}
+
+        {/* Advanced section — collapsible */}
+        <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
+          <button
+            onClick={() => setAdvancedOpen(prev => !prev)}
+            className="flex items-center gap-1.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+          >
+            {advancedOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            Advanced
+          </button>
+
+          {advancedOpen && (
+            <div className="mt-3 space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                  Chat Embed URL
+                </label>
+                <input
+                  type="text"
+                  value={embedUrlOverride}
+                  onChange={e => setEmbedUrlOverride(e.target.value)}
+                  placeholder="https://chat.usable.dev"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-50 text-sm placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                />
+                <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
+                  Override the chat embed base URL. Leave empty for default.
+                </p>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                  Embed Token
+                </label>
+                <input
+                  type="text"
+                  value={embedTokenOverride}
+                  onChange={e => setEmbedTokenOverride(e.target.value)}
+                  placeholder="uc_..."
+                  className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-50 text-sm font-mono text-xs placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                />
+                <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
+                  Override the embed token. Leave empty for the built-in default.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="flex justify-between pt-2">
           {currentConfig?.workspaceId && (

@@ -4,8 +4,16 @@ import { useUsableChat } from '@/hooks/use-usable-chat'
 import { PARENT_TOOLS, createToolCallHandler, handleTokenRefreshRequest } from '@/lib/chat-tools'
 import type { MultiplexerEvent } from '@/lib/embed-sdk'
 
-const EMBED_TOKEN = import.meta.env.VITE_USABLE_EMBED_TOKEN
-const CHAT_BASE_URL = (import.meta.env.VITE_USABLE_CHAT_URL as string) || 'https://chat.usable.dev'
+const DEFAULT_EMBED_TOKEN = 'uc_a579fa90dc8b270ba4f93dd750b81d17b4803bcd8afcf133accfcda28cfd4284'
+const DEFAULT_CHAT_URL = 'https://chat.usable.dev'
+
+function getEmbedToken(): string {
+  return localStorage.getItem('embed-token-override') || DEFAULT_EMBED_TOKEN
+}
+
+export function getChatBaseUrl(): string {
+  return localStorage.getItem('embed-url-override') || DEFAULT_CHAT_URL
+}
 
 // Full whitelabel theme definitions — explicit values for ALL variables.
 // We override every --uc-* variable AND the Tailwind remappings so we
@@ -298,8 +306,10 @@ export function useChatEmbed() {
     return () => timers.forEach(clearTimeout)
   }, [isReady, authToken, applyTheme])
 
-  const embedSrc = EMBED_TOKEN
-    ? `${CHAT_BASE_URL}/embed?token=${EMBED_TOKEN}`
+  const token = getEmbedToken()
+  const baseUrl = getChatBaseUrl()
+  const embedSrc = token
+    ? `${baseUrl}/embed?token=${token}`
     : null
 
   return { iframeRef, embedSrc, isReady }

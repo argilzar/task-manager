@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { createUsableChatEmbed } from '@/lib/embed-sdk'
+import { getChatBaseUrl } from '@/hooks/use-chat-embed'
 import type { UsableChatEmbed, ContextItem, ParentToolSchema, MultiplexerEvent } from '@/lib/embed-sdk'
 
 interface UseUsableChatOptions {
@@ -26,7 +27,7 @@ export function useUsableChat(
     const iframe = iframeRef.current
     if (!iframe) return
 
-    const chatBaseUrl = (import.meta.env.VITE_USABLE_CHAT_URL as string) || 'https://chat.usable.dev'
+    const chatBaseUrl = getChatBaseUrl()
     const embed = createUsableChatEmbed(iframe, {
       iframeOrigin: chatBaseUrl,
       onReady: () => {
