@@ -1,4 +1,3 @@
-import { listWorkspaceMembers } from './usable-api'
 import { getCachedTaskFragments } from './task-cache'
 import { fragmentToTask } from './fragment-serializer'
 import { getTokenClaims } from './auth'
@@ -17,8 +16,13 @@ let cacheTimestamp = 0
 const CACHE_TTL = 300_000 // 5 minutes
 
 /**
- * Build a member list from task comment authors + current user.
- * Used as fallback when the members API endpoint returns 401.
+ * Build a member list from task assignees, comment authors, and the current user.
+ *
+ * The Usable `/api/workspaces/{id}/members` endpoint only supports SessionAuth
+ * (cookie-based), not BearerAuth (token). Since this app authenticates via
+ * Keycloak OIDC tokens, that endpoint will always return 401. Instead we derive
+ * the member list from data we already have: the JWT claims for the current
+ * user, plus any assigneeIds and comment authors found in task fragments.
  */
 async function buildMembersFromTasks(workspaceId: string): Promise<MemberInfo[]> {
   const seen = new Map<string, MemberInfo>()
@@ -35,7 +39,7 @@ async function buildMembersFromTasks(workspaceId: string): Promise<MemberInfo[]>
     })
   }
 
-  // Extract unique authors from task comments
+  // Extract unique authors from task comments + assignees
   try {
     const fragments = await getCachedTaskFragments(workspaceId)
     for (const fragment of fragments) {
@@ -51,7 +55,6 @@ async function buildMembersFromTasks(workspaceId: string): Promise<MemberInfo[]>
           })
         }
       }
-      // Also include assignee placeholders if we see unknown assigneeIds
       if (task.assigneeId && !seen.has(task.assigneeId)) {
         seen.set(task.assigneeId, {
           id: task.assigneeId,
@@ -71,7 +74,7 @@ async function buildMembersFromTasks(workspaceId: string): Promise<MemberInfo[]>
 
 /**
  * Get workspace members, using cache when available.
- * Tries the API first, falls back to building from task data if 401.
+ * Builds from task data + JWT claims (members API requires SessionAuth which we don't have).
  */
 export async function getCachedMembers(workspaceId: string): Promise<MemberInfo[]> {
   const now = Date.now()
@@ -79,14 +82,7 @@ export async function getCachedMembers(workspaceId: string): Promise<MemberInfo[
     return cachedMembers
   }
 
-  let members: MemberInfo[]
-  try {
-    members = await listWorkspaceMembers(workspaceId)
-  } catch (err) {
-    // Members endpoint likely returned 401 (SessionAuth only) — fall back
-    console.warn('[member-cache] Members API failed, building from task data:', String(err))
-    members = await buildMembersFromTasks(workspaceId)
-  }
+  const members = await buildMembersFromTasks(workspaceId)
 
   cachedMembers = members
   cachedWorkspaceId = workspaceId
