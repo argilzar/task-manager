@@ -2,6 +2,7 @@ import { cn } from '@/lib/utils'
 import { ThemeToggle } from './ThemeToggle'
 import { Button } from '@/components/ui/Button'
 import { useConnectionStatus, useWorkspaceConfig } from '@/hooks/use-usable'
+import { useAppName } from '@/hooks/use-app-name'
 import { useState, useEffect, useCallback } from 'react'
 import { List, Columns3, GitBranch, GanttChart, FolderOpen, Users, LogIn, LogOut, Settings, MessageCircle } from 'lucide-react'
 import type { ChatMode } from '../../../../shared/types'
@@ -30,6 +31,7 @@ const SECONDARY_NAV: { id: string; label: string; icon: ReactNode }[] = [
 ]
 
 export function Sidebar({ currentView, onViewChange, onOpenSettings, chatMode, dockedChatOpen, onToggleDockedChat }: SidebarProps) {
+  const appName = useAppName()
   const { data: isConnected } = useConnectionStatus()
   const { data: workspaceConfig } = useWorkspaceConfig()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -83,7 +85,7 @@ export function Sidebar({ currentView, onViewChange, onOpenSettings, chatMode, d
     <aside className="w-56 h-full bg-gray-50 dark:bg-gray-800/50 border-r border-gray-200 dark:border-gray-700 flex flex-col">
       <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center gap-2.5">
         <img src={usableLogo} alt="Usable" className="h-6 w-6 object-contain" />
-        <h1 className="text-sm font-bold text-gray-900 dark:text-white">My Tasks Planner</h1>
+        <h1 className="text-sm font-bold text-gray-900 dark:text-white">{appName}</h1>
       </div>
 
       <nav className="flex-1 p-3 space-y-1">

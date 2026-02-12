@@ -37,6 +37,7 @@ const api = {
   app: {
     getTheme: () => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_THEME),
     setTheme: (theme: string) => ipcRenderer.invoke(IPC_CHANNELS.APP_SET_THEME, theme),
+    getAppName: () => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_NAME),
   },
   usable: {
     listWorkspaces: () => ipcRenderer.invoke(IPC_CHANNELS.USABLE_LIST_WORKSPACES),
