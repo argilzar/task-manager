@@ -66,6 +66,13 @@ The packaged application will be output to the `dist/` directory.
 
 On first launch, log in and select a Usable workspace in the Settings modal. The AI chat embed is preconfigured and works out of the box.
 
+### Environment variables
+
+| Variable | Type | Description | Default | Required |
+|----------|------|-------------|---------|----------|
+| APP_NAME | string | Application display name (window title, sidebar, tray tooltip) | "My Tasks Planner" | |
+| APP_ID | string | macOS bundle identifier (used when packaging with `bun run dist`) | "com.flowcore.my-tasks-plan" | |
+
 ### Advanced Overrides
 
 If you need to point the chat embed to a different URL or use a different embed token (e.g., for local development), open **Settings > Advanced** and override:

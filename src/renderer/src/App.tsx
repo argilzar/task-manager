@@ -20,6 +20,7 @@ import { useProjects, useProjectFilter } from '@/hooks/use-projects'
 import { useMembers } from '@/hooks/use-members'
 import { useChatMode } from '@/hooks/use-chat-mode'
 import { useTheme } from '@/hooks/use-theme'
+import { useAppName } from '@/hooks/use-app-name'
 import { LogIn } from 'lucide-react'
 import type { TaskWithTags } from '../../shared/types'
 import usableLogo from '@/assets/usable-logo-transparent.png'
@@ -36,6 +37,12 @@ export default function App() {
   // Apply dark/light theme class on <html> — must run in BOTH windows
   // (bubble overlay + app) so useChatEmbed can detect the correct theme.
   useTheme()
+  const appName = useAppName()
+
+  // Keep document title in sync with configured app name (e.g. when APP_NAME env is set)
+  useEffect(() => {
+    if (appName) document.title = appName
+  }, [appName])
 
   // Listen for cross-window task mutation broadcasts from the main process.
   // When the other window (chat overlay or app) mutates tasks, this fires
@@ -145,7 +152,7 @@ export default function App() {
           <img src={usableMascot} alt="" className="w-20 h-20 object-contain" />
           <div className="flex items-center gap-2">
             <img src={usableLogo} alt="" className="h-5 w-5 object-contain" />
-            <span className="text-sm font-bold text-gray-900 dark:text-white">My Tasks Planner</span>
+            <span className="text-sm font-bold text-gray-900 dark:text-white">{appName}</span>
           </div>
         </div>
         {authState === 'checking' || authState === 'logging-in' ? (
