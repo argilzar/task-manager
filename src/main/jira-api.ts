@@ -12,6 +12,17 @@ export interface JiraIssueInfo {
   priorityName?: string
   issueType?: string
   webUrl: string
+  /** JIRA project key (e.g. CLOUD) for tagging */
+  projectKey?: string
+  /** JIRA project name */
+  projectName?: string
+  /** Assignee email for matching to workspace member */
+  assigneeEmail?: string
+  assigneeDisplayName?: string
+  /** Epic issue key when this issue is linked to an Epic */
+  epicKey?: string
+  /** Epic summary/name (set when we resolve the Epic) */
+  epicName?: string
 }
 
 /** JIRA transition from GET .../transitions */
@@ -32,6 +43,11 @@ const PLANNER_STATUS_TO_JIRA_STATUS: Record<TaskStatus, string[]> = {
 function baseUrl(domain: string): string {
   const d = domain.replace(/^https?:\/\//, '').replace(/\.atlassian\.net.*$/, '')
   return `https://${d}.atlassian.net`
+}
+
+/** Build the JIRA browse URL for an issue (for "Open in JIRA" link). */
+export function getJiraBrowseUrl(config: JiraConfig, issueKey: string): string {
+  return `${baseUrl(config.domain)}/browse/${encodeURIComponent(issueKey)}`
 }
 
 function authHeader(email: string, apiToken: string): string {
@@ -80,6 +96,27 @@ function descriptionToPlainText(value: unknown): string {
   return String(value)
 }
 
+const ISSUE_KEY_REGEX = /^[A-Z][A-Z0-9]+-\d+$/
+
+function findEpicKeyInFields(fields: Record<string, unknown>): { key: string; name?: string } | undefined {
+  // JIRA structure (company-managed): parent can be the Epic
+  const parent = fields.parent as { key?: string; fields?: { summary?: string } } | undefined
+  if (parent?.key && ISSUE_KEY_REGEX.test(String(parent.key))) {
+    return { key: parent.key, name: parent.fields?.summary }
+  }
+  // Custom field "Epic Link" or similar: value can be key string or { key, ... }
+  for (const value of Object.values(fields)) {
+    if (typeof value === 'string' && ISSUE_KEY_REGEX.test(value)) {
+      return { key: value }
+    }
+    if (value && typeof value === 'object' && 'key' in value && typeof (value as { key: string }).key === 'string') {
+      const v = value as { key: string; fields?: { summary?: string } }
+      if (ISSUE_KEY_REGEX.test(v.key)) return { key: v.key, name: v.fields?.summary }
+    }
+  }
+  return undefined
+}
+
 /**
  * Fetch a JIRA issue by key and return normalized fields for the planner.
  */
@@ -93,26 +130,38 @@ export async function getJiraIssue(config: JiraConfig, issueKey: string): Promis
   const data = (await res.json()) as {
     key: string
     self?: string
-    fields?: {
+    fields?: Record<string, unknown> & {
       summary?: string
       description?: unknown
       status?: { name: string }
       priority?: { name: string }
       issuetype?: { name: string }
+      project?: { key: string; name?: string }
+      assignee?: { emailAddress?: string; displayName?: string; accountId?: string }
     }
   }
   const fields = data.fields ?? {}
   const base = baseUrl(config.domain)
   const webUrl = `${base}/browse/${data.key}`
 
+  const project = fields.project as { key?: string; name?: string } | undefined
+  const assignee = fields.assignee as { emailAddress?: string; displayName?: string } | undefined
+  const epic = findEpicKeyInFields(fields)
+
   return {
     key: data.key,
-    summary: fields.summary ?? data.key,
+    summary: (fields.summary as string) ?? data.key,
     description: descriptionToPlainText(fields.description),
     statusName: fields.status?.name ?? 'Unknown',
     priorityName: fields.priority?.name,
     issueType: fields.issuetype?.name,
     webUrl,
+    projectKey: project?.key,
+    projectName: project?.name,
+    assigneeEmail: assignee?.emailAddress,
+    assigneeDisplayName: assignee?.displayName,
+    epicKey: epic?.key,
+    epicName: epic?.name,
   }
 }
 

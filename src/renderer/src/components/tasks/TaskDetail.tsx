@@ -98,11 +98,30 @@ export function TaskDetail({ task: taskProp, open, onClose }: TaskDetailProps) {
     }
   }, [task?.id, task?.description, editor])
 
+  // Resolve JIRA URL: use stored jiraUrl or fetch browse URL for tasks that only have jiraKey (e.g. older imports)
+  const [resolvedJiraUrl, setResolvedJiraUrl] = useState<string | null>(null)
+  useEffect(() => {
+    if (!task?.jiraKey) {
+      setResolvedJiraUrl(null)
+      return
+    }
+    if (task.jiraUrl) {
+      setResolvedJiraUrl(null)
+      return
+    }
+    let cancelled = false
+    window.api.jira.getBrowseUrl(task.jiraKey).then(res => {
+      if (!cancelled && res.success && res.data) setResolvedJiraUrl(res.data)
+    })
+    return () => { cancelled = true }
+  }, [task?.jiraKey, task?.jiraUrl])
+
   if (!task) return null
 
   const usableUrl = config?.workspaceId
     ? `https://usable.dev/dashboard/workspaces/${config.workspaceId}/fragments/${task.id}`
     : null
+  const jiraUrl = task.jiraUrl ?? resolvedJiraUrl ?? null
 
   const taskDeps = graph?.edges.filter(e => e.taskId === task.id) || []
   const depTasks = taskDeps.map(e => graph?.nodes.find(n => n.id === e.dependsOnId)).filter(Boolean)
@@ -605,6 +624,17 @@ export function TaskDetail({ task: taskProp, open, onClose }: TaskDetailProps) {
               >
                 <ExternalLink size={12} />
                 Open in Usable
+              </a>
+            )}
+            {jiraUrl && (
+              <a
+                href={jiraUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+              >
+                <ExternalLink size={12} />
+                Open in JIRA
               </a>
             )}
           </div>

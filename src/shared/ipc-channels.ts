@@ -51,4 +51,5 @@ export const IPC_CHANNELS = {
   JIRA_SET_CONFIG: 'jira:set-config',
   JIRA_GET_ISSUE: 'jira:get-issue',
   JIRA_IMPORT_TASK: 'jira:import-task',
+  JIRA_GET_BROWSE_URL: 'jira:get-browse-url',
 } as const

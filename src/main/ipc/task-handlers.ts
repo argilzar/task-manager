@@ -186,6 +186,7 @@ export function registerTaskHandlers(): void {
         endDate: data.endDate === null ? undefined : (data.endDate ?? current.endDate),
         assigneeId: data.assigneeId === null ? undefined : (data.assigneeId ?? current.assigneeId),
         jiraKey: data.jiraKey === null ? undefined : (data.jiraKey ?? current.jiraKey),
+        jiraUrl: current.jiraUrl,
       }
 
       const payload = taskToFragmentPayload(merged)
@@ -267,6 +268,7 @@ export function registerTaskHandlers(): void {
           endDate: current.endDate,
           assigneeId: current.assigneeId,
           jiraKey: current.jiraKey,
+          jiraUrl: current.jiraUrl,
         }
 
         const payload = taskToFragmentPayload(merged)
@@ -321,6 +323,7 @@ export function registerTaskHandlers(): void {
         endDate: current.endDate,
         assigneeId: current.assigneeId,
         jiraKey: current.jiraKey,
+        jiraUrl: current.jiraUrl,
       }
 
       const payload = taskToFragmentPayload(merged)

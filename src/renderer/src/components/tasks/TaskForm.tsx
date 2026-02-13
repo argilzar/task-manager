@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
@@ -7,7 +8,7 @@ import { useCreateTask, useUpdateTask } from '@/hooks/use-tasks'
 import { useTags } from '@/hooks/use-tags'
 import { useProjects } from '@/hooks/use-projects'
 import { useMembers } from '@/hooks/use-members'
-import { X } from 'lucide-react'
+import { X, Download } from 'lucide-react'
 import { useToast } from '@/components/ui/Toast'
 import type { TaskWithTags } from '../../../../shared/types'
 
@@ -33,11 +34,14 @@ export function TaskForm({ open, onClose, task }: TaskFormProps) {
   const [projectInput, setProjectInput] = useState('')
   const [showProjectSuggestions, setShowProjectSuggestions] = useState(false)
   const [highlightedProjectIndex, setHighlightedProjectIndex] = useState(-1)
+  const [jiraKeyInput, setJiraKeyInput] = useState('')
+  const [jiraImportLoading, setJiraImportLoading] = useState(false)
   const tagInputRef = useRef<HTMLInputElement>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
   const projectInputRef = useRef<HTMLInputElement>(null)
   const createTask = useCreateTask()
   const updateTask = useUpdateTask()
+  const queryClient = useQueryClient()
   const { data: allTags } = useTags()
   const allProjects = useProjects()
   const { data: members } = useMembers()
@@ -56,12 +60,35 @@ export function TaskForm({ open, onClose, task }: TaskFormProps) {
       setTaskProjects(task?.projects || [])
       setTagInput('')
       setProjectInput('')
+      setJiraKeyInput('')
       setShowSuggestions(false)
       setShowProjectSuggestions(false)
       setHighlightedIndex(-1)
       setHighlightedProjectIndex(-1)
     }
   }, [open, task])
+
+  const handleJiraImport = async () => {
+    const key = jiraKeyInput.trim()
+    if (!key) return
+    setJiraImportLoading(true)
+    try {
+      const res = await window.api.jira.importTask(key)
+      if (!res.success) {
+        toast({ title: res.error || 'JIRA import failed', variant: 'error' })
+        return
+      }
+      queryClient.invalidateQueries({ queryKey: ['tasks'] })
+      queryClient.invalidateQueries({ queryKey: ['graph'] })
+      queryClient.invalidateQueries({ queryKey: ['tags'] })
+      toast({ title: 'Task imported from JIRA', variant: 'success' })
+      onClose()
+    } catch {
+      toast({ title: 'Failed to import from JIRA', variant: 'error' })
+    } finally {
+      setJiraImportLoading(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -223,6 +250,33 @@ export function TaskForm({ open, onClose, task }: TaskFormProps) {
   return (
     <Dialog open={open} onClose={onClose} title={isEditing ? 'Edit Task' : 'New Task'}>
       <form onSubmit={handleSubmit} className="space-y-4">
+        {!isEditing && (
+          <div className="rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800/50 p-3 space-y-2">
+            <p className="text-xs font-medium text-gray-600 dark:text-gray-400">Import from JIRA</p>
+            <div className="flex gap-2">
+              <div className="flex-1 min-w-0">
+                <Input
+                  id="jira-key"
+                  value={jiraKeyInput}
+                  onChange={e => setJiraKeyInput(e.target.value)}
+                  placeholder="e.g. PROJ-123"
+                  onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleJiraImport() } }}
+                />
+              </div>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleJiraImport}
+                disabled={!jiraKeyInput.trim() || jiraImportLoading}
+                loading={jiraImportLoading}
+                className="shrink-0"
+              >
+                <Download size={14} className="mr-1.5" />
+                Import
+              </Button>
+            </div>
+          </div>
+        )}
         <Input id="title" label="Title" value={title} onChange={e => setTitle(e.target.value)} placeholder="Task title..." required autoFocus />
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Description</label>

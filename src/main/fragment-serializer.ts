@@ -26,6 +26,7 @@ export function taskToFragmentPayload(task: {
   endDate?: string
   assigneeId?: string
   jiraKey?: string
+  jiraUrl?: string
 }): {
   title: string
   content: string
@@ -56,6 +57,9 @@ export function taskToFragmentPayload(task: {
   }
   if (task.jiraKey) {
     fmLines.push(`jiraKey: "${task.jiraKey}"`)
+  }
+  if (task.jiraUrl) {
+    fmLines.push(`jiraUrl: "${task.jiraUrl}"`)
   }
 
   if (dependencies.length > 0) {
@@ -109,6 +113,7 @@ export function fragmentToTask(fragment: UsableFragment): TaskWithTags {
   const endDate = typeof frontmatter.endDate === 'string' ? frontmatter.endDate : undefined
   const assigneeId = typeof frontmatter.assigneeId === 'string' ? frontmatter.assigneeId : undefined
   const jiraKey = typeof frontmatter.jiraKey === 'string' ? frontmatter.jiraKey : undefined
+  const jiraUrl = typeof frontmatter.jiraUrl === 'string' ? frontmatter.jiraUrl : undefined
 
   // Filter tags: only keep simple user tags (no colon-prefixed system tags), deduplicated
   const allTags = fragment.tags || []
@@ -139,6 +144,7 @@ export function fragmentToTask(fragment: UsableFragment): TaskWithTags {
     endDate,
     assigneeId,
     jiraKey,
+    jiraUrl,
   }
 }
 

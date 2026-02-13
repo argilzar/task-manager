@@ -2,6 +2,7 @@ import { StatusBadge } from './StatusBadge'
 import { PriorityBadge } from './PriorityBadge'
 import { TaskActions } from './TaskActions'
 import { useMembers, resolveMemberName } from '@/hooks/use-members'
+import { ExternalLink } from 'lucide-react'
 import type { TaskWithTags } from '../../../../shared/types'
 
 interface TaskCardProps {
@@ -29,6 +30,18 @@ export function TaskCard({ task, onClick, compact, saving }: TaskCardProps) {
       <div className="flex items-start justify-between gap-2 mb-2">
         <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate flex-1">{task.title}</h3>
         <div className="flex items-center gap-1 shrink-0">
+          {task.jiraUrl && (
+            <a
+              href={task.jiraUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={e => e.stopPropagation()}
+              title="Open in JIRA"
+              className="p-0.5 rounded text-gray-400 hover:text-primary-500 dark:hover:text-primary-400 transition-colors"
+            >
+              <ExternalLink size={12} />
+            </a>
+          )}
           <PriorityBadge priority={task.priority} />
           <TaskActions taskId={task.id} />
         </div>

@@ -38,6 +38,7 @@ export interface TaskWithTags {
   endDate?: string       // ISO date string (YYYY-MM-DD)
   assigneeId?: string    // userId of assigned workspace member
   jiraKey?: string       // e.g. PROJ-123 — when set, status changes sync to JIRA
+  jiraUrl?: string       // e.g. https://company.atlassian.net/browse/PROJ-123 — link to open in JIRA
 }
 
 export interface CreateTaskInput {

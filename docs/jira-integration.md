@@ -15,6 +15,17 @@ JIRA uses **JIRA Cloud** and **Basic auth** (email + API token).
 - **Email**: The Atlassian account email used for API access.
 - **API token**: Create one at [Atlassian API tokens](https://id.atlassian.com/manage-profile/security/api-tokens).
 
+### Token permissions
+
+The API token does not have its own scopes; it authenticates as your Atlassian account. The **Jira permissions** of that account determine what the integration can do. For import and status sync to work, the account must have:
+
+| Permission | Used for |
+|------------|----------|
+| **Browse projects** / **View issues** | Reading issue details (summary, description, status) and available transitions |
+| **Transition issues** (or **Edit issues**) | Moving the issue to a new status when you update the planner task |
+
+Ensure the account has these permissions for every Jira project you want to import from or sync status to. Project admins can grant them via **Project settings → People** (or your site's equivalent).
+
 Config is stored in the app’s user data directory as `jira-config.json`. You can set it in **Settings → JIRA integration** (collapsible section): enter domain, email, and API token, then Save. Use “Clear JIRA configuration” to remove it. The API token field shows a “leave blank to keep” placeholder when config is already saved so you can change domain/email without re-entering the token.
 
 If JIRA is not configured, `import_jira_task` and status sync are no-ops or return a clear error.
@@ -30,9 +41,12 @@ The AI chat has a parent tool **`import_jira_task`**:
   3. If a planner task already exists with the same `jiraKey`, returns that task (no duplicate).
   4. Otherwise creates a new task with:
      - Title: `[PROJ-123] <summary>`
-     - Description: JIRA description (plain text) plus a link to the issue.
+     - Description: Short one-liner with a link to the issue (full details stay in JIRA).
      - Status/priority mapped from JIRA (see below).
-     - Tag `jira` and `jiraKey: PROJ-123` so status sync can find it.
+     - Tag `jira` and the JIRA **project key** (e.g. `CLOUD`) for filtering.
+     - **Project**: Set from the issue’s Epic (Epic name or key) when present, otherwise from the JIRA project name/key.
+     - **Assignee**: Set when the JIRA assignee’s email matches a workspace member.
+     - `jiraKey` and `jiraUrl` so status sync and “Open in JIRA” work.
 
 Users can say things like: “Import PROJ-123” or “Add the task for MY-456 from JIRA.”
 
@@ -70,7 +84,7 @@ The code fetches available transitions for the issue and picks the first one who
 
 ## Data model
 
-- **Task (fragment)**: Frontmatter can include `jiraKey: "PROJ-123"`. It is persisted by `fragment-serializer` and exposed on `TaskWithTags.jiraKey`.
+- **Task (fragment)**: Frontmatter can include `jiraKey: "PROJ-123"` and `jiraUrl: "https://…/browse/PROJ-123"`. Both are persisted by `fragment-serializer` and exposed on `TaskWithTags`. When a task is imported from JIRA, `jiraUrl` is set so the UI can show an **Open in JIRA** link in the task detail and on the task card.
 - **CreateTaskInput / UpdateTaskInput**: Optional `jiraKey` so tasks can be created or updated with a link.
 
 ## Security and storage

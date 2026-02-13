@@ -111,9 +111,9 @@ export function KanbanView({ onTaskClick, projectFilter, assigneeFilter }: Kanba
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="flex gap-4 h-full overflow-x-auto overflow-y-auto pb-4">
+      <div className="flex gap-6 h-full overflow-x-auto overflow-y-auto pb-4">
         {columns.map(col => (
-          <div key={col.id} className="flex-shrink-0 w-72">
+          <div key={col.id} className="flex-1 min-w-72 max-w-xl">
             <div className="flex items-center justify-between mb-3 px-1">
               <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200">{col.label}</h3>
               <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">

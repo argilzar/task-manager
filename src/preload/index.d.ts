@@ -45,6 +45,7 @@ interface JiraApi {
   setConfig(config: JiraConfig | null): Promise<IpcResponse<void>>
   getIssue(issueKey: string): Promise<IpcResponse<{ key: string; summary: string; description: string; statusName: string; priorityName?: string; webUrl: string }>>
   importTask(issueKey: string): Promise<IpcResponse<TaskWithTags>>
+  getBrowseUrl(issueKey: string): Promise<IpcResponse<string | null>>
 }
 
 interface UsableApi {

@@ -82,6 +82,7 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.JIRA_SET_CONFIG, config),
     getIssue: (issueKey: string) => ipcRenderer.invoke(IPC_CHANNELS.JIRA_GET_ISSUE, issueKey),
     importTask: (issueKey: string) => ipcRenderer.invoke(IPC_CHANNELS.JIRA_IMPORT_TASK, issueKey),
+    getBrowseUrl: (issueKey: string) => ipcRenderer.invoke(IPC_CHANNELS.JIRA_GET_BROWSE_URL, issueKey),
   },
   auth: {
     login: () => ipcRenderer.invoke(IPC_CHANNELS.AUTH_LOGIN),
